@@ -1,0 +1,30 @@
+{
+  "name": "places",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "standard && node index.js"
+  },
+  "contributors": [
+    "Duarte Mendes",
+    "Miguel Calafate"
+  ],
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.17.1",
+    "express": "^4.15.2",
+    "googleplaces": "^0.6.1",
+    "mongoose": "^4.9.1",
+    "morgan": "^1.8.1"
+  },
+  "devDependencies": {
+    "eslint-plugin-react": "^6.10.3",
+    "standard": "^9.0.2"
+  },
+  "standard": {
+    "ignore": [
+      "/bd/**"
+    ]
+  }
+}
