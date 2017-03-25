@@ -1,11 +1,8 @@
 # Feijões API
-> git clone https://github.com/duartemendes/feijoes-api
-
-> cd feijoes-api
-
-> npm install
-
-> setup configuration
+> git clone https://github.com/duartemendes/feijoes-api  
+cd feijoes-api  
+npm install  
+setup configuration
 
 
 ### Create config.js file in root directory with the following code:
