@@ -5,15 +5,12 @@
   setup configuration
 
 
-### Create config folder in root directory with the following files:
-##### config.js
-```
-exports.apiKey = process.env.GOOGLE_PLACES_API_KEY || 'your_google_places_api_key'
-exports.outputFormat = process.env.GOOGLE_PLACES_OUTPUT_FORMAT || 'json'
-```
-##### urls.js
+### Create config.js file in root directory with the following code:
 ```
 module.exports = {
-  'mongo': 'urlForDatabase'
+  SECRET: 'your_jwt_secret',
+  DATABASE: 'your_database_url',
+  GOOGLE_PLACES_API_KEY = 'your_google_places_api_key',
+  GOOGLE_PLACES_OUTPUT_FORMAT = 'json'
 }
 ```

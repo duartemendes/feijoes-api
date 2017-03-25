@@ -1,11 +1,13 @@
 const express = require('express')
-const bodyParser = require('body-parser') // it enables reading parameters from the http request body
-const morgan = require('morgan') // it prints the http request to the console
+const bodyParser = require('body-parser') // enables reading parameters from the http request body
+const morgan = require('morgan') // prints the http request to the console
 const mongoose = require('mongoose')
-const urls = require('./config/urls')
+const config = require('./config')
 
+const mongooseError = (err) => console.log('Mongoose connection error: ', err)
 mongoose.Promise = global.Promise
-mongoose.connect(urls.mongo)
+mongoose.connection.on('error', (err) => mongooseError(err))
+mongoose.connect(config.DATABASE).catch(err => mongooseError(err))
 
 const isDBConnected = (req, res, next) => {
   if (mongoose.connection.readyState === 1) { return next() }
@@ -16,6 +18,9 @@ const app = express()
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(morgan('dev'))
+app.set('secret', config.SECRET)
+
+app.get('/', (req, res) => res.send('Feijões API!'))
 
 app.all('/*', isDBConnected, (req, res, next) => { next() })
 
@@ -23,7 +28,7 @@ app.all('/*', isDBConnected, (req, res, next) => { next() })
 require('./routes/')(app)
 
 // if request gets here page doesn't exist
-app.use((req, res) => res.status(404).json({ error: true, message: 'Page not found' }))
+app.use((req, res) => res.status(404).json({ success: false, message: 'Page not found' }))
 
 const port = process.env.PORT || 3000
 app.listen(port, () => console.log('Live at http://localhost:', port))

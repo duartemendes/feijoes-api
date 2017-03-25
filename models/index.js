@@ -1,3 +1,4 @@
 module.exports = {
-  Info: require('./info')
+  Info: require('./info'),
+  User: require('./user')
 }
