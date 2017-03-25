@@ -7,31 +7,23 @@ const urls = require('./config/urls')
 mongoose.Promise = global.Promise
 mongoose.connect(urls.mongo)
 
+const isDBConnected = (req, res, next) => {
+  if (mongoose.connection.readyState === 1) { return next() }
+  return res.status(503).json({ error: true, message: 'DB down' })
+}
+
 const app = express()
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(morgan('dev'))
 
-app.all('/*', isDBConnected, (req, res, next) => {
-  next()
-})
+app.all('/*', isDBConnected, (req, res, next) => { next() })
 
 // requests go here
-require('./routes/routes')(app)
+require('./routes/')(app)
 
-// if request gets here it doesn't exist
-app.use((req, res) => {
-  res.status(404).json({ error: true, message: 'Page not found' })
-})
+// if request gets here page doesn't exist
+app.use((req, res) => res.status(404).json({ error: true, message: 'Page not found' }))
 
 const port = process.env.PORT || 3000
-app.listen(port, () => {
-  console.log('Live at http://localhost:', port)
-})
-
-function isDBConnected (req, res, next) {
-  if (mongoose.connection.readyState === 1) {
-    return next()
-  }
-  return res.status(503).json({ error: true, message: 'DB down' })
-}
+app.listen(port, () => console.log('Live at http://localhost:', port))

@@ -1,7 +1,7 @@
-const Info = require('../models/info')
+const {Info} = require('../models/')
 
 module.exports = {
-  getDescription: function (req, res) {
+  getDescription: (req, res) => {
     Info.findOne({}, { _id: 0 }).exec()
       .then((info) => {
         res.json(info)

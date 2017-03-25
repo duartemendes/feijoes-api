@@ -1,5 +1,5 @@
 const info = require('./info')
 
-module.exports = function (app) {
+module.exports = (app) => {
   app.get('/description', info.getDescription)
 }
