@@ -1,6 +1,6 @@
 const config = require('../config')
+const {Restaurant} = require('../models')
 const places = require('googleplaces-promises').setDefaultAPI(config.GOOGLE_PLACES_API_KEY)
-// const places = new Places(config.GOOGLE_PLACES_API_KEY, config.GOOGLE_PLACES_OUTPUT_FORMAT)
 const parameters = {
   location: [41.691591, -8.827032],
   radius: '100',
@@ -33,6 +33,15 @@ module.exports = {
   photo: (req, res) => {
     places.imageFetch({ photoreference: req.params.photo_reference })
       .then(data => res.redirect(data))
+      .catch(err => res.json({ success: false, message: err }))
+  },
+
+  dishesOfTheDay: (req, res) => {
+    Restaurant.findOne({ placeID: req.params.place_id }, { votes: 0 }).exec()
+      .then(restaurant => {
+        if (!restaurant) { return res.json({ success: false, message: 'There isn\'t information about this restaurant yet' }) }
+        return res.json({ dishes: restaurant.dishes })
+      })
       .catch(err => res.json({ success: false, message: err }))
   }
 }
