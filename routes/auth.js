@@ -3,8 +3,8 @@ const jwt = require('jsonwebtoken')
 
 module.exports = {
   validateToken: (req, res, next) => {
-    const token = req.body.token || req.query.token || req.headers['x-access-token']
-    const deviceID = req.body.deviceID
+    const token = req.headers['x-access-token'] || req.body['x-access-token']
+    const deviceID = req.body.deviceID || req.query.deviceID
     if (!token || !deviceID) { return res.status(403).json({ success: false, message: 'No token provided' }) }
 
     jwt.verify(token, req.app.get('secret'), (err, decoded) => {
@@ -13,12 +13,8 @@ module.exports = {
       validateUser(decoded.deviceID)
         .then(user => {
           req.user = user
-          if (user.deviceID !== deviceID) {
-            // let's give no answer to the user
-            return
-            // return res.json({ success: false, message: 'DeviceID doesn\'t match token\' deviceID' })
-          }
-          next()
+          // let's give no answer to the user if deviceID wasn't provided
+          if (user.deviceID === deviceID) { next() }
         })
         .catch(() => res.json({ success: false }))
     })
