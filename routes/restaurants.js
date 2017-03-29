@@ -19,8 +19,14 @@ module.exports = {
     parameters.location = [latitude, longitude]
     if (req.body.radius) { parameters.radius = req.body.radius }
 
+    // TODO: check next page
     places.nearBySearch(parameters)
       .then(data => res.json({
+        request: {
+          latitude: latitude,
+          longitude: longitude,
+          radius: parameters.radius
+        },
         amount: {
           total: data.results.length,
           openNow: data.results.filter(r => r.opening_hours && r.opening_hours.open_now).length
