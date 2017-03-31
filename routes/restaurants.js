@@ -31,7 +31,20 @@ module.exports = {
           total: data.results.length,
           openNow: data.results.filter(r => r.opening_hours && r.opening_hours.open_now).length
         },
-        restaurants: data.results
+        // restaurants: data.results
+        restaurants: data.results.map((rest, index, array) => {
+          Restaurant.findOne({ placeID: rest.place_id }, (err, restaurant) => {
+            totalDishes = restaurant ? restaurant.dishes.x.length : 0
+          })
+          return {
+            latitude: rest.geometry.location.lat,
+            longitude: rest.geometry.location.lng,
+            id: rest.id,
+            place_id: rest.place_id,
+            open: rest.opening_hours && rest.opening_hours.open_now,
+            totalDishes
+          }
+        })
       }))
       .catch(err => res.json({ success: false, message: err }))
   },
