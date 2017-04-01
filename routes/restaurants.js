@@ -1,8 +1,9 @@
 const config = require('../config')
 const {Restaurant} = require('../models')
 const places = require('googleplaces-promises').setDefaultAPI(config.GOOGLE_PLACES_API_KEY)
+const clone = require('clone')
 const parameters = {
-  location: [41.691591, -8.827032],
+  location: [41.692032, -8.827187],
   radius: '100',
   types: 'restaurant',
   // language: 'pt-PT',
@@ -12,14 +13,16 @@ const parameters = {
 module.exports = {
   nearBy: (req, res) => {
     const latitude = req.body.latitude
-    const longitude = req.body.longitude
     if (!latitude) { return res.json({ success: false, message: 'Missing latitude' }) }
+    const longitude = req.body.longitude
     if (!longitude) { return res.json({ success: false, message: 'Missing longitude' }) }
 
-    parameters.location = [latitude, longitude]
-    if (req.body.radius) { parameters.radius = req.body.radius }
+    const params = clone(parameters)
+    params.location = [latitude, longitude]
+    params.pagetoken = req.body.next_page_token
+    if (req.body.radius) { params.radius = req.body.radius }
 
-    places.nearBySearch(parameters)
+    places.nearBySearch(params)
       .then(data => {
         Promise.all(data.results.map(result =>
           Restaurant.findOne({ placeID: result.place_id }).exec()
@@ -27,7 +30,7 @@ module.exports = {
               latitude: result.geometry.location.lat,
               longitude: result.geometry.location.lng,
               placeID: result.place_id,
-              name: result.name, // only for testing -> it's not useful for the application
+              name: result.name, // only for testing -> it's not pretended / useful for the application
               open: result.opening_hours && result.opening_hours.open_now,
               totalDishes: restaurant ? restaurant.dishes.length : 0
             }))
@@ -37,7 +40,8 @@ module.exports = {
           request: {
             latitude,
             longitude,
-            radius: parameters.radius
+            radius: params.radius,
+            pageToken: params.pagetoken
           },
           results: {
             total: results.length,
