@@ -4,13 +4,16 @@ const places = require('googleplaces-promises').setDefaultAPI(config.GOOGLE_PLAC
 const clone = require('clone')
 const parameters = {
   location: [41.692032, -8.827187],
-  radius: '100',
   types: 'restaurant',
-  // language: 'pt-PT',
-  rankBy: 'google.maps.places.RankBy.DISTANCE'
+  rankby: 'distance'
 }
 
 module.exports = {
+  /**
+   * if a token for the next page is received all the other parameters will be ignored by the final request
+   * if a radius is received the request will ignore the rankby distance -
+   *  which means that who uses this api will have to decide between radius or sort by distance
+   */
   nearBy: (req, res) => {
     const latitude = req.body.latitude
     if (!latitude) { return res.json({ success: false, message: 'Missing latitude' }) }
@@ -20,7 +23,10 @@ module.exports = {
     const params = clone(parameters)
     params.location = [latitude, longitude]
     params.pagetoken = req.body.next_page_token
-    if (req.body.radius) { params.radius = req.body.radius }
+    if (req.body.radius) {
+      delete params.rankby
+      params.radius = req.body.radius
+    }
 
     places.nearBySearch(params)
       .then(data => {
