@@ -19,33 +19,35 @@ module.exports = {
     parameters.location = [latitude, longitude]
     if (req.body.radius) { parameters.radius = req.body.radius }
 
-    // TODO: check next page
     places.nearBySearch(parameters)
-      .then(data => res.json({
-        request: {
-          latitude: latitude,
-          longitude: longitude,
-          radius: parameters.radius
-        },
-        amount: {
-          total: data.results.length,
-          openNow: data.results.filter(r => r.opening_hours && r.opening_hours.open_now).length
-        },
-        // restaurants: data.results
-        restaurants: data.results.map((rest, index, array) => {
-          Restaurant.findOne({ placeID: rest.place_id }, (err, restaurant) => {
-            totalDishes = restaurant ? restaurant.dishes.x.length : 0
-          })
-          return {
-            latitude: rest.geometry.location.lat,
-            longitude: rest.geometry.location.lng,
-            id: rest.id,
-            place_id: rest.place_id,
-            open: rest.opening_hours && rest.opening_hours.open_now,
-            totalDishes
-          }
-        })
-      }))
+      .then(data => {
+        Promise.all(data.results.map(result =>
+          Restaurant.findOne({ placeID: result.place_id }).exec()
+            .then(restaurant => ({
+              latitude: result.geometry.location.lat,
+              longitude: result.geometry.location.lng,
+              placeID: result.place_id,
+              name: result.name, // only for testing -> it's not useful for the application
+              open: result.opening_hours && result.opening_hours.open_now,
+              totalDishes: restaurant ? restaurant.dishes.length : 0
+            }))
+        ))
+        .then(results => res.json({
+          success: true,
+          request: {
+            latitude,
+            longitude,
+            radius: parameters.radius
+          },
+          results: {
+            total: results.length,
+            nextPage: data.next_page_token || false,
+            openNow: results.filter(res => res.open).length
+          },
+          restaurants: results
+        }))
+        .catch(err => res.json({ success: false, message: err }))
+      })
       .catch(err => res.json({ success: false, message: err }))
   },
 
