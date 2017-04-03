@@ -2,6 +2,7 @@ const config = require('../config')
 const {Restaurant} = require('../models')
 const places = require('googleplaces-promises').setDefaultAPI(config.GOOGLE_PLACES_API_KEY)
 const clone = require('clone')
+const {Haversine} = require('haversine-position')
 const parameters = {
   location: [41.692032, -8.827187],
   types: 'restaurant',
@@ -51,8 +52,9 @@ module.exports = {
           },
           results: {
             total: results.length,
+            openNow: results.filter(res => res.open).length,
             nextPage: data.next_page_token || false,
-            openNow: results.filter(res => res.open).length
+            distanceFromFarestOne: calculateDistanceFromCenter({latitude, longitude}, results[results.length - 1])
           },
           restaurants: results
         }))
@@ -75,4 +77,16 @@ module.exports = {
       })
       .catch(err => res.json({ success: false, message: err }))
   }
+}
+
+const calculateDistanceFromCenter = (center, point) => {
+  if (!point) { return 0 }
+
+  return Haversine.getDistance({
+    lat: center.latitude,
+    lng: center.longitude
+  }, {
+    lat: point.latitude,
+    lng: point.longitude
+  })
 }
