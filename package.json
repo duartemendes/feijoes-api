@@ -20,6 +20,7 @@
     "clone": "^2.1.1",
     "express": "^4.15.2",
     "googleplaces-promises": "^1.0.0",
+    "haversine-position": "^1.0.3",
     "jsonwebtoken": "^7.3.0",
     "mongoose": "^4.9.1",
     "morgan": "^1.8.1"
