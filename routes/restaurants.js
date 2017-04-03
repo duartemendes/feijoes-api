@@ -1,38 +1,63 @@
 const config = require('../config')
 const {Restaurant} = require('../models')
 const places = require('googleplaces-promises').setDefaultAPI(config.GOOGLE_PLACES_API_KEY)
+const clone = require('clone')
 const parameters = {
-  location: [41.691591, -8.827032],
-  radius: '100',
+  location: [41.692032, -8.827187],
   types: 'restaurant',
-  // language: 'pt-PT',
-  rankBy: 'google.maps.places.RankBy.DISTANCE'
+  rankby: 'distance'
 }
 
 module.exports = {
+  /**
+   * if a token for the next page is received all the other parameters will be ignored by the final request
+   * if a radius is received the request will ignore the rankby distance -
+   *  which means that who uses this api will have to decide between radius or sort by distance
+   */
   nearBy: (req, res) => {
     const latitude = req.body.latitude
-    const longitude = req.body.longitude
     if (!latitude) { return res.json({ success: false, message: 'Missing latitude' }) }
+    const longitude = req.body.longitude
     if (!longitude) { return res.json({ success: false, message: 'Missing longitude' }) }
 
-    parameters.location = [latitude, longitude]
-    if (req.body.radius) { parameters.radius = req.body.radius }
+    const params = clone(parameters)
+    params.location = [latitude, longitude]
+    params.pagetoken = req.body.next_page_token
+    if (req.body.radius) {
+      delete params.rankby
+      params.radius = req.body.radius
+    }
 
-    // TODO: check next page
-    places.nearBySearch(parameters)
-      .then(data => res.json({
-        request: {
-          latitude: latitude,
-          longitude: longitude,
-          radius: parameters.radius
-        },
-        amount: {
-          total: data.results.length,
-          openNow: data.results.filter(r => r.opening_hours && r.opening_hours.open_now).length
-        },
-        restaurants: data.results
-      }))
+    places.nearBySearch(params)
+      .then(data => {
+        Promise.all(data.results.map(result =>
+          Restaurant.findOne({ placeID: result.place_id }).exec()
+            .then(restaurant => ({
+              latitude: result.geometry.location.lat,
+              longitude: result.geometry.location.lng,
+              placeID: result.place_id,
+              name: result.name, // only for testing -> it's not pretended / useful for the application
+              open: result.opening_hours && result.opening_hours.open_now,
+              totalDishes: restaurant ? restaurant.dishes.length : 0
+            }))
+        ))
+        .then(results => res.json({
+          success: true,
+          request: {
+            latitude,
+            longitude,
+            radius: params.radius,
+            pageToken: params.pagetoken
+          },
+          results: {
+            total: results.length,
+            nextPage: data.next_page_token || false,
+            openNow: results.filter(res => res.open).length
+          },
+          restaurants: results
+        }))
+        .catch(err => res.json({ success: false, message: err }))
+      })
       .catch(err => res.json({ success: false, message: err }))
   },
 
