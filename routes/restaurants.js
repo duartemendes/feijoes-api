@@ -38,7 +38,7 @@ module.exports = {
               longitude: result.geometry.location.lng,
               placeID: result.place_id,
               name: result.name, // only for testing -> it's not pretended / useful for the application
-              open: result.opening_hours && result.opening_hours.open_now,
+              open: (result.opening_hours && result.opening_hours.open_now) || false,
               totalDishes: restaurant ? restaurant.dishes.length : 0
             }))
         ))
