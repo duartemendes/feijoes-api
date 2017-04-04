@@ -6,6 +6,10 @@ const restaurantSchema = mongoose.Schema({
     unique: true,
     required: true
   },
+  permanentlyClosed: {
+    type: Boolean,
+    default: false
+  },
   favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   dishes: [{
     _id: { id: false },
@@ -48,5 +52,19 @@ const restaurantSchema = mongoose.Schema({
   },
   totalValidDishes: { type: Number, default: 0 }
 })
+
+restaurantSchema.statics.checkRestaurant = function (placeID, permanentlyClosed) {
+  const self = this
+  self.findOne({ placeID }).exec()
+    .then(restaurant => {
+      if (!restaurant) {
+        self.create({ placeID, permanentlyClosed })
+      } else if (permanentlyClosed !== undefined && restaurant.permanentlyClosed !== permanentlyClosed) {
+        restaurant.permanentlyClosed = permanentlyClosed
+        restaurant.save()
+      }
+    })
+    .catch(err => console.log(err))
+}
 
 module.exports = mongoose.model('Restaurant', restaurantSchema)

@@ -8,8 +8,33 @@ const parameters = {
   types: 'restaurant',
   rankby: 'distance'
 }
+const INVALID_REQUEST = 'INVALID_REQUEST'
 
 module.exports = {
+  details: (req, res) => {
+    places.placeDetailsRequest({ placeid: req.params.placeID })
+      .then(data => {
+        if (data.status === INVALID_REQUEST) { return res.json({ success: false, message: 'Restaurant not found' }) }
+
+        res.json({
+          success: true,
+          details: {
+            formatted_address: data.result.formatted_address,
+            vicinity: data.result.vicinity,
+            formatted_phone_number: data.result.formatted_phone_number,
+            international_phone_number: data.result.international_phone_number,
+            name: data.result.name,
+            url: data.result.url,
+            permanentlyClosed: data.result.permanently_closed || false,
+            photos: data.result.photos.map(photo => photo.photo_reference)
+          }
+        })
+
+        Restaurant.checkRestaurant(req.params.placeID, data.result.permanently_closed)
+      })
+      .catch(err => res.json({ success: false, message: err }))
+  },
+
   /**
    * if a token for the next page is received all the other parameters will be ignored by the final request
    * if a radius is received the request will ignore the rankby distance -
@@ -34,6 +59,7 @@ module.exports = {
         Promise.all(data.results.map(result =>
           Restaurant.findOne({ placeID: result.place_id }).exec()
             .then(restaurant => ({
+              permanentlyClosed: restaurant ? restaurant.permanentlyClosed : false,
               latitude: result.geometry.location.lat,
               longitude: result.geometry.location.lng,
               placeID: result.place_id,
@@ -42,22 +68,25 @@ module.exports = {
               totalDishes: restaurant ? restaurant.dishes.length : 0
             }))
         ))
-        .then(results => res.json({
-          success: true,
-          request: {
-            latitude,
-            longitude,
-            radius: params.radius,
-            pageToken: params.pagetoken
-          },
-          results: {
-            total: results.length,
-            openNow: results.filter(res => res.open).length,
-            nextPage: data.next_page_token || false,
-            distanceFromFarestOne: calculateDistanceFromCenter({latitude, longitude}, results[results.length - 1])
-          },
-          restaurants: results
-        }))
+        .then(results => {
+          results = results.filter(restaurant => !restaurant.permanentlyClosed)
+          return res.json({
+            success: true,
+            request: {
+              latitude,
+              longitude,
+              radius: params.radius,
+              pageToken: params.pagetoken
+            },
+            results: {
+              total: results.length,
+              openNow: results.filter(res => res.open).length,
+              nextPage: data.next_page_token || false,
+              distanceFromFarestOne: calculateDistanceFromCenter({latitude, longitude}, results[results.length - 1])
+            },
+            restaurants: results
+          })
+        })
         .catch(err => res.json({ success: false, message: err }))
       })
       .catch(err => res.json({ success: false, message: err }))

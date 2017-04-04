@@ -12,6 +12,7 @@ module.exports = (app) => {
   // private routes go here
   app.get('/testToken', (req, res) => res.json({ user: req.user }))
 
+  app.get('/restaurant/:placeID', restaurants.details)
   app.post('/restaurants/nearBy', restaurants.nearBy)
   app.get('/restaurants/image/:photo_reference', restaurants.photo)
   app.get('/restaurants/dishesOfTheDay/:place_id', restaurants.dishesOfTheDay)
