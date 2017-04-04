@@ -17,7 +17,6 @@
   },
   "dependencies": {
     "body-parser": "^1.17.1",
-    "clone": "^2.1.1",
     "express": "^4.15.2",
     "googleplaces-promises": "^1.0.0",
     "haversine-position": "^1.0.3",
