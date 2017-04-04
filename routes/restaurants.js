@@ -1,13 +1,7 @@
 const config = require('../config')
 const {Restaurant} = require('../models')
 const places = require('googleplaces-promises').setDefaultAPI(config.GOOGLE_PLACES_API_KEY)
-const clone = require('clone')
 const {Haversine} = require('haversine-position')
-const parameters = {
-  location: [41.692032, -8.827187],
-  types: 'restaurant',
-  rankby: 'distance'
-}
 const INVALID_REQUEST = 'INVALID_REQUEST'
 
 module.exports = {
@@ -46,9 +40,13 @@ module.exports = {
     const longitude = req.body.longitude
     if (!longitude) { return res.json({ success: false, message: 'Missing longitude' }) }
 
-    const params = clone(parameters)
-    params.location = [latitude, longitude]
-    params.pagetoken = req.body.next_page_token
+    const params = {
+      location: [latitude, longitude],
+      types: 'restaurant',
+      rankby: 'distance',
+      pagetoken: req.body.next_page_token
+    }
+
     if (req.body.radius) {
       delete params.rankby
       params.radius = req.body.radius
@@ -56,6 +54,8 @@ module.exports = {
 
     places.nearBySearch(params)
       .then(data => {
+        if (data.status === INVALID_REQUEST) { return res.json({ success: false, message: INVALID_REQUEST }) }
+
         Promise.all(data.results.map(result =>
           Restaurant.findOne({ placeID: result.place_id }).exec()
             .then(restaurant => ({
@@ -103,6 +103,38 @@ module.exports = {
       .then(restaurant => {
         if (!restaurant) { return res.json({ success: false, message: 'There isn\'t information about this restaurant yet' }) }
         return res.json({ dishes: restaurant.dishes })
+      })
+      .catch(err => res.json({ success: false, message: err }))
+  },
+
+  /**
+   * Use location 0,0 and radius big enough to cover the whole world in order
+   * for the server IP don't be used as a location reference:
+   * https://developers.google.com/places/web-service/autocomplete#location_biasing
+   */
+  search: (req, res) => {
+    const params = {
+      input: req.params.query,
+      location: [0, 0],
+      radius: 20000000
+    }
+
+    if (req.body.latitude && req.body.longitude) {
+      params.location = [req.body.latitude, req.body.longitude]
+      params.radius = req.body.radius || 5000
+    }
+
+    places.placeAutocomplete(params)
+      .then(data => {
+        if (data.status === INVALID_REQUEST) { return res.json({ success: false, message: INVALID_REQUEST }) }
+
+        data = data.predictions.map(prediction => ({
+          description: prediction.description,
+          placeID: prediction.place_id,
+          isEstablishment: prediction.types.indexOf('establishment') > -1
+        }))
+
+        return res.json({ success: true, results: data })
       })
       .catch(err => res.json({ success: false, message: err }))
   }

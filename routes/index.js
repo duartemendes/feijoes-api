@@ -17,5 +17,7 @@ module.exports = (app) => {
   app.get('/restaurants/image/:photo_reference', restaurants.photo)
   app.get('/restaurants/dishesOfTheDay/:place_id', restaurants.dishesOfTheDay)
 
+  app.post('/search/:query', restaurants.search)
+
   app.get('/dishes/:sortBy', dishes.getAllDishes)
 }
