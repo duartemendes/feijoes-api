@@ -41,6 +41,7 @@ module.exports = {
    *  which means that who uses this api will have to decide between radius or sort by distance
    */
   nearBy: (req, res) => {
+    const startTime = new Date()
     const latitude = req.body.latitude
     if (!latitude) { return res.json({ success: false, message: 'Missing latitude' }) }
     const longitude = req.body.longitude
@@ -56,6 +57,7 @@ module.exports = {
 
     places.nearBySearch(params)
       .then(data => {
+        const pause = new Date() - startTime
         Promise.all(data.results.map(result =>
           Restaurant.findOne({ placeID: result.place_id }).exec()
             .then(restaurant => ({
@@ -63,10 +65,12 @@ module.exports = {
               latitude: result.geometry.location.lat,
               longitude: result.geometry.location.lng,
               placeID: result.place_id,
-              name: result.name, // only for testing -> it's not pretended / useful for the application
+              name: result.name,
+              photoReference: (result.photos && result.photos.length) > 0 ? result.photos[0].photo_reference : null,
               open: (result.opening_hours && result.opening_hours.open_now) || false,
               totalDishes: restaurant ? restaurant.dishes.length : 0
             }))
+            .catch(err => console.log(err))
         ))
         .then(results => {
           results = results.filter(restaurant => !restaurant.permanentlyClosed)
@@ -76,7 +80,11 @@ module.exports = {
               latitude,
               longitude,
               radius: params.radius,
-              pageToken: params.pagetoken
+              pageToken: params.pagetoken,
+              duration: {
+                untilGooglePlacesAnwser: pause,
+                total: new Date() - startTime
+              }
             },
             results: {
               total: results.length,
