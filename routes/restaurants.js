@@ -65,6 +65,7 @@ module.exports = {
               longitude: result.geometry.location.lng,
               placeID: result.place_id,
               name: result.name,
+              vicinity: result.vicinity,
               photoReference: (result.photos && result.photos.length) > 0 ? result.photos[0].photo_reference : null,
               open: (result.opening_hours && result.opening_hours.open_now) || false,
               totalDishes: restaurant ? restaurant.dishes.length : 0
