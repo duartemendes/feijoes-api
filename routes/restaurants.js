@@ -102,7 +102,7 @@ module.exports = {
 
   photo: (req, res) => {
     places.imageFetch({ photoreference: req.params.photo_reference })
-      .then(data => res.redirect(data))
+      .then(link => res.json({ success: true, link }))
       .catch(err => res.json({ success: false, message: err }))
   },
 
