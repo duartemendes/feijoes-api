@@ -3,6 +3,10 @@ const {Restaurant} = require('../models')
 const places = require('googleplaces-promises').setDefaultAPI(config.GOOGLE_PLACES_API_KEY)
 const {Haversine} = require('haversine-position')
 const INVALID_REQUEST = 'INVALID_REQUEST'
+const handleInternalError = err => {
+  console.log(err)
+  return { success: false, message: err }
+}
 
 module.exports = {
   details: (req, res) => {
@@ -20,13 +24,15 @@ module.exports = {
             name: data.result.name,
             url: data.result.url,
             permanentlyClosed: data.result.permanently_closed || false,
-            photos: data.result.photos.map(photo => photo.photo_reference)
+            latitude: data.result.geometry.location.lat,
+            longitude: data.result.geometry.location.lng,
+            photos: (data.result.photos && data.result.photos.length > 0) ? data.result.photos.map(photo => photo.photo_reference) : undefined
           }
         })
 
         Restaurant.checkRestaurant(req.params.placeID, data.result.permanently_closed)
       })
-      .catch(err => res.json({ success: false, message: err }))
+      .catch(err => res.json(handleInternalError(err)))
   },
 
   /**
@@ -66,7 +72,7 @@ module.exports = {
               placeID: result.place_id,
               name: result.name,
               vicinity: result.vicinity,
-              photoReference: (result.photos && result.photos.length) > 0 ? result.photos[0].photo_reference : null,
+              photoReference: (result.photos && result.photos.length) > 0 ? result.photos[0].photo_reference : undefined,
               open: (result.opening_hours && result.opening_hours.open_now) || false,
               totalDishes: restaurant ? restaurant.dishes.length : 0
             }))
@@ -92,18 +98,18 @@ module.exports = {
               nextPage: data.next_page_token || false,
               distanceFromFarestOne: calculateDistanceFromCenter({latitude, longitude}, results[results.length - 1])
             },
-            restaurants: results
+            restaurants: results || []
           })
         })
-        .catch(err => res.json({ success: false, message: err }))
+        .catch(err => res.json(handleInternalError(err)))
       })
-      .catch(err => res.json({ success: false, message: err }))
+      .catch(err => res.json(handleInternalError(err)))
   },
 
   photo: (req, res) => {
     places.imageFetch({ photoreference: req.params.photo_reference })
       .then(link => res.json({ success: true, link }))
-      .catch(err => res.json({ success: false, message: err }))
+      .catch(err => res.json(handleInternalError(err)))
   },
 
   dishesOfTheDay: (req, res) => {
@@ -112,7 +118,7 @@ module.exports = {
         if (!restaurant) { return res.json({ success: false, message: 'There isn\'t information about this restaurant yet' }) }
         return res.json({ dishes: restaurant.dishes })
       })
-      .catch(err => res.json({ success: false, message: err }))
+      .catch(err => res.json(handleInternalError(err)))
   },
 
   /**
@@ -144,7 +150,7 @@ module.exports = {
 
         return res.json({ success: true, results: data })
       })
-      .catch(err => res.json({ success: false, message: err }))
+      .catch(err => res.json(handleInternalError(err)))
   }
 }
 
