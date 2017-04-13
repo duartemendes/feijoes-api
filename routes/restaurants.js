@@ -14,7 +14,7 @@ module.exports = {
       .then(data => {
         if (data.status === INVALID_REQUEST) { return res.json({ success: false, message: 'Restaurant not found' }) }
 
-        res.json({
+        let response = {
           success: true,
           details: {
             formatted_address: data.result.formatted_address,
@@ -29,11 +29,18 @@ module.exports = {
             open: (data.result.opening_hours && data.result.opening_hours.open_now) || false,
             // periods: data.result.opening_hours ? data.result.opening_hours.periods : undefined,
             permanentlyClosed: data.result.permanently_closed || false,
-            schedule: data.result.opening_hours ? data.result.opening_hours.weekday_text.map(day => day.charAt(0).toUpperCase() + day.slice(1)) : undefined
+            schedule: data.result.opening_hours ? data.result.opening_hours.weekday_text.map(day => day.charAt(0).toUpperCase() + day.slice(1)) : undefined,
+            isReallyRestaurant: data.result.types.includes('restaurant') || data.result.types.includes('food')
           }
-        })
+        }
 
-        Restaurant.checkRestaurant(req.params.placeID, data.result.permanently_closed)
+        Restaurant.findOne({ placeID: req.params.placeID }).exec()
+          .then(restaurant => {
+            response.details.totalDishes = (restaurant && restaurant.dishes ? restaurant.dishes.length : 0)
+            res.json(response)
+            if (response.details.isReallyRestaurant) { Restaurant.checkRestaurant(req.params.placeID, data.result.permanently_closed) }
+          })
+          .catch(err => res.json(handleInternalError(err)))
       })
       .catch(err => res.json(handleInternalError(err)))
   },
