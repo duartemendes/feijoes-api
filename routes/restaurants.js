@@ -29,8 +29,18 @@ module.exports = {
             open: (data.result.opening_hours && data.result.opening_hours.open_now) || false,
             // periods: data.result.opening_hours ? data.result.opening_hours.periods : undefined,
             permanentlyClosed: data.result.permanently_closed || false,
-            schedule: data.result.opening_hours ? data.result.opening_hours.weekday_text.map(day => day.charAt(0).toUpperCase() + day.slice(1)) : undefined,
-            isReallyRestaurant: data.result.types.includes('restaurant') || data.result.types.includes('food')
+            isReallyRestaurant: data.result.types.includes('restaurant') || data.result.types.includes('food'),
+            // schedule: data.result.opening_hours ? data.result.opening_hours.weekday_text.map(day => day.charAt(0).toUpperCase() + day.slice(1)) : undefined
+            schedule: data.result.opening_hours ?
+              data.result.opening_hours.weekday_text.map(day => {
+                  let weekDay = day.substr(0,day.indexOf(': '))
+                  weekDay = weekDay.charAt(0).toUpperCase() + weekDay.slice(1)
+                  const hours = day.substr(day.indexOf(': ') + 1)
+                  return {
+                    weekDay,
+                    hours
+                  }
+                }) : undefined
           }
         }
 
