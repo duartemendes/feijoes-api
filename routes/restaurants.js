@@ -10,7 +10,7 @@ const handleInternalError = err => {
 
 module.exports = {
   details: (req, res) => {
-    places.placeDetailsRequest({ placeid: req.params.placeID })
+    places.placeDetailsRequest({ placeid: req.params.placeID, language: 'pt-PT' })
       .then(data => {
         if (data.status === INVALID_REQUEST) { return res.json({ success: false, message: 'Restaurant not found' }) }
 
@@ -23,10 +23,13 @@ module.exports = {
             international_phone_number: data.result.international_phone_number,
             name: data.result.name,
             url: data.result.url,
-            permanentlyClosed: data.result.permanently_closed || false,
             latitude: data.result.geometry.location.lat,
             longitude: data.result.geometry.location.lng,
-            photos: (data.result.photos && data.result.photos.length > 0) ? data.result.photos.map(photo => photo.photo_reference) : undefined
+            photos: (data.result.photos && data.result.photos.length > 0) ? data.result.photos.map(photo => photo.photo_reference) : undefined,
+            open: (data.result.opening_hours && data.result.opening_hours.open_now) || false,
+            // periods: data.result.opening_hours ? data.result.opening_hours.periods : undefined,
+            permanentlyClosed: data.result.permanently_closed || false,
+            schedule: data.result.opening_hours ? data.result.opening_hours.weekday_text.map(day => day.charAt(0).toUpperCase() + day.slice(1)) : undefined
           }
         })
 
