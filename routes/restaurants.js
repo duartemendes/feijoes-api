@@ -10,7 +10,7 @@ const handleInternalError = err => {
 
 module.exports = {
   details: (req, res) => {
-    places.placeDetailsRequest({ placeid: req.params.placeID, language: 'pt-PT' })
+    places.placeDetailsRequest({ placeid: req.params.placeID, language: req.query.language || 'en' })
       .then(data => {
         if (data.status === INVALID_REQUEST) { return res.json({ success: false, message: 'Restaurant not found' }) }
 
