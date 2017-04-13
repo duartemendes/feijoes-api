@@ -7,7 +7,7 @@ module.exports = (app) => {
   app.get('/description', info.getDescription)
 
   // from now on a valid JWT is required
-  // app.use(auth.validateToken)
+  app.use(auth.validateToken)
 
   // private routes go here
   app.get('/testToken', (req, res) => res.json({ user: req.user }))
@@ -19,5 +19,5 @@ module.exports = (app) => {
 
   app.post('/search/:query', restaurants.search)
 
-  app.get('/dishes/:sortBy', dishes.getAllDishes)
+  app.get('/dishes', dishes.getDishes)
 }

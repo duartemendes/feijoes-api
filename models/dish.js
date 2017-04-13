@@ -9,6 +9,16 @@ const dishSchema = mongoose.Schema({
   timesServed: {
     type: Number,
     default: 0
+  },
+  votes: {
+    up: {
+      type: Number,
+      default: 0
+    },
+    down: {
+      type: Number,
+      default: 0
+    }
   }
 })
 
