@@ -52,6 +52,35 @@ module.exports = {
           .catch(err => res.json(handleInternalError(err)))
       })
       .catch(err => res.json(handleInternalError(err)))
+  },
+
+  voteOnDish: (req, res) => {
+    if (!req.body.dish) { return res.json({ success: false, message: 'Missing dish' }) }
+    if (!req.body.isUp) { return res.json({ success: false, message: 'Missing type of vote' }) }
+
+    Restaurant.findOne({ placeID: req.params.placeID }).populate('dishes.dish').exec()
+      .then(restaurant => {
+        if (!restaurant) { return res.json({ success: false, message: 'Restaurant not found' }) }
+
+        const index = restaurant.dishes.findIndex(dish => dish.dishName === req.body.dish)
+        if (index < 0) { return res.json({ success: false, message: 'Dish not found' }) }
+
+        const votes = restaurant.dishes[index].votes
+        if (votes.down.some(user => user.equals(req.user._id)) || votes.up.some(user => user.equals(req.user._id))) {
+          return res.json({ success: false, message: 'User already voted' })
+        }
+
+        const key = req.body.isUp === 'true' ? 'up' : 'down'
+        restaurant.dishes[index].dish.votes[key]++
+        votes[key].push(req.user._id)
+
+        res.json({ success: true, dish: buildDishResponse(restaurant.dishes[index], req.user._id) })
+
+        restaurant.save()
+        req.user.votes[key]++
+        req.user.save()
+      })
+      .catch(err => res.json(handleInternalError(err)))
   }
 }
 
@@ -60,8 +89,8 @@ const buildDishResponse = (dish, userID) => ({
   votes: {
     down: dish.votes.down.length,
     up: dish.votes.up.length,
-    voted: dish.votes.down.some(userID_ => userID.equals(userID)) ? -1
-            : (dish.votes.up.some(userID_ => userID.equals(userID)) ? 1 : 0)
+    voted: dish.votes.down.some(userID_ => userID_.equals(userID)) ? -1
+            : (dish.votes.up.some(userID_ => userID_.equals(userID)) ? 1 : 0)
   },
   prices: dish.prices,
   images: dish.images

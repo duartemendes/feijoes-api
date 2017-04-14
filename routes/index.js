@@ -22,4 +22,5 @@ module.exports = (app) => {
 
   app.get('/restaurant/dishes/:placeID', dishes.dishesOfTheDay)
   app.post('/restaurant/dishes/:placeID', dishes.assignDish)
+  app.put('/restaurant/dishes/:placeID', dishes.voteOnDish)
 }
