@@ -47,7 +47,7 @@ module.exports = {
           .then(restaurant => {
             response.details.totalDishes = (restaurant && restaurant.dishes ? restaurant.dishes.length : 0)
             res.json(response)
-            if (response.details.isReallyRestaurant) { Restaurant.checkRestaurant(req.params.placeID, data.result.permanently_closed) }
+            if (response.details.isReallyRestaurant) { Restaurant.checkRestaurant(req.params.placeID, data.result.permanently_closed).then().catch(err => console.log(err)) }
           })
           .catch(err => res.json(handleInternalError(err)))
       })
@@ -132,10 +132,23 @@ module.exports = {
   },
 
   dishesOfTheDay: (req, res) => {
-    Restaurant.findOne({ placeID: req.params.place_id }, { votes: 0 }).exec()
+    Restaurant.findOne({ placeID: req.params.place_id }, { 'dishes.dish': 0, 'dishes.creator': 0, 'dishes.date': 0 }).exec()
       .then(restaurant => {
         if (!restaurant) { return res.json({ success: false, message: 'There isn\'t information about this restaurant yet' }) }
-        return res.json({ dishes: restaurant.dishes })
+
+        const dishes = restaurant.dishes.map(dish => ({
+          dishName: dish.dishName,
+          votes: {
+            down: dish.votes.down.length,
+            up: dish.votes.up.length,
+            voted: dish.votes.down.some(userID => userID.equals(req.user._id)) ? -1
+                    : (dish.votes.up.some(userID => userID.equals(req.user._id)) ? 1 : 0)
+          },
+          prices: dish.prices,
+          images: dish.images
+        }))
+
+        return res.json({ dishes })
       })
       .catch(err => res.json(handleInternalError(err)))
   },

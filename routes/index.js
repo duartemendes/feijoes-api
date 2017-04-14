@@ -20,4 +20,5 @@ module.exports = (app) => {
   app.post('/search/:query', restaurants.search)
 
   app.get('/dishes', dishes.getDishes)
+  app.post('/dishes', dishes.assignDish)
 }

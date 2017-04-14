@@ -14,7 +14,7 @@ module.exports = {
       validateUser(decoded.deviceID)
         .then(user => {
           req.user = user
-          // let's give no answer to the user if deviceID wasn't provided
+          // let's give no answer to the user if deviceID wasn't provided or is wrong
           if (user.deviceID === deviceID) { next() }
         })
         .catch(() => res.json({ success: false }))

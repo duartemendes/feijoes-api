@@ -13,8 +13,7 @@ const restaurantSchema = mongoose.Schema({
   favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   dishes: [{
     _id: { id: false },
-    // TODO: create Dish Schema
-    // dish: { type: mongoose.Schema.Types.ObjectId, ref: 'Dish' },
+    dish: { type: mongoose.Schema.Types.ObjectId, ref: 'Dish' },
     dishName: String,
     date: { type: Date, default: Date.now },
     creator: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
@@ -24,11 +23,11 @@ const restaurantSchema = mongoose.Schema({
       menu: {
         price: Number,
         includes: {
-          bread: { type: Boolean, default: false },
-          soup: { type: Boolean, default: false },
-          drink: { type: Boolean, default: false },
-          coffee: { type: Boolean, default: false },
-          dessert: { type: Boolean, default: false }
+          bread: Boolean,
+          soup: Boolean,
+          drink: Boolean,
+          dessert: Boolean,
+          coffee: Boolean
         }
       }
     },
@@ -45,8 +44,8 @@ const restaurantSchema = mongoose.Schema({
         bread: { type: Boolean, default: false },
         soup: { type: Boolean, default: false },
         drink: { type: Boolean, default: false },
-        coffee: { type: Boolean, default: false },
-        dessert: { type: Boolean, default: false }
+        dessert: { type: Boolean, default: false },
+        coffee: { type: Boolean, default: false }
       }
     }
   },
@@ -55,16 +54,20 @@ const restaurantSchema = mongoose.Schema({
 
 restaurantSchema.statics.checkRestaurant = function (placeID, permanentlyClosed) {
   const self = this
-  self.findOne({ placeID }).exec()
-    .then(restaurant => {
-      if (!restaurant) {
-        self.create({ placeID, permanentlyClosed })
-      } else if (permanentlyClosed !== undefined && restaurant.permanentlyClosed !== permanentlyClosed) {
-        restaurant.permanentlyClosed = permanentlyClosed
-        restaurant.save()
-      }
-    })
-    .catch(err => console.log(err))
+  return new Promise((resolve, reject) => {
+    self.findOne({ placeID }).exec()
+      .then(restaurant => {
+        if (!restaurant) {
+          self.create({ placeID, permanentlyClosed }).then(restaurant => resolve(restaurant)).catch(err => reject(err))
+        } else if (permanentlyClosed !== undefined && restaurant.permanentlyClosed !== permanentlyClosed) {
+          restaurant.permanentlyClosed = permanentlyClosed
+          restaurant.save().then(restaurant => resolve(restaurant)).catch(err => reject(err))
+        } else {
+          resolve(restaurant)
+        }
+      })
+      .catch(err => reject(err))
+  })
 }
 
 module.exports = mongoose.model('Restaurant', restaurantSchema)
