@@ -18,7 +18,7 @@ module.exports = {
   },
 
   dishesOfTheDay: (req, res) => {
-    Restaurant.findOne({ placeID: req.params.place_id }, { 'dishes.dish': 0, 'dishes.creator': 0, 'dishes.date': 0 }).exec()
+    Restaurant.findOne({ placeID: req.params.placeID }, { 'dishes.dish': 0, 'dishes.creator': 0, 'dishes.date': 0 }).exec()
       .then(restaurant => {
         if (!restaurant) { return res.json({ success: false, message: 'There isn\'t information about this restaurant yet' }) }
 
@@ -30,14 +30,13 @@ module.exports = {
 
   assignDish: (req, res) => {
     if (!req.body.dish) { return res.json({ success: false, message: 'Missing dish name' }) }
-    if (!req.body.placeID) { return res.json({ success: false, message: 'Missing restaurant' }) }
     if (!req.body.single && !req.body.menu) { return res.json({ success: false, message: 'Missing prices' }) }
 
     Dish.findOne({ name: req.body.dish }).exec()
       .then(dish => {
         if (!dish) { return res.json({ success: false, message: 'Dish not found', code: 1 }) }
 
-        Restaurant.checkRestaurant(req.body.placeID)
+        Restaurant.checkRestaurant(req.params.placeID)
           .then(restaurant => {
             if (restaurant.permanentlyClosed) { return res.json({ success: false, message: 'Restaurant permanently closed', code: 2 }) }
             if (restaurant.dishes.some(dish_ => dish_.dish.equals(dish._id))) { return res.json({ success: false, message: 'Dish already assigned', code: 3 }) }

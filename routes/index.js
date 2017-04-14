@@ -15,10 +15,11 @@ module.exports = (app) => {
   app.get('/restaurant/:placeID', restaurants.details)
   app.post('/restaurants/nearBy', restaurants.nearBy)
   app.get('/restaurants/image/:photo_reference', restaurants.photo)
-  app.get('/restaurants/dishesOfTheDay/:place_id', restaurants.dishesOfTheDay)
 
   app.post('/search/:query', restaurants.search)
 
   app.get('/dishes', dishes.getDishes)
-  app.post('/dishes', dishes.assignDish)
+
+  app.get('/restaurant/dishes/:placeID', dishes.dishesOfTheDay)
+  app.post('/restaurant/dishes/:placeID', dishes.assignDish)
 }

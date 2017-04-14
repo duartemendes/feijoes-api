@@ -131,28 +131,6 @@ module.exports = {
       .catch(err => res.json(handleInternalError(err)))
   },
 
-  dishesOfTheDay: (req, res) => {
-    Restaurant.findOne({ placeID: req.params.place_id }, { 'dishes.dish': 0, 'dishes.creator': 0, 'dishes.date': 0 }).exec()
-      .then(restaurant => {
-        if (!restaurant) { return res.json({ success: false, message: 'There isn\'t information about this restaurant yet' }) }
-
-        const dishes = restaurant.dishes.map(dish => ({
-          dishName: dish.dishName,
-          votes: {
-            down: dish.votes.down.length,
-            up: dish.votes.up.length,
-            voted: dish.votes.down.some(userID => userID.equals(req.user._id)) ? -1
-                    : (dish.votes.up.some(userID => userID.equals(req.user._id)) ? 1 : 0)
-          },
-          prices: dish.prices,
-          images: dish.images
-        }))
-
-        return res.json({ dishes })
-      })
-      .catch(err => res.json(handleInternalError(err)))
-  },
-
   /**
    * Use location 0,0 and radius big enough to cover the whole world in order
    * for the server IP don't be used as a location reference:
