@@ -9,7 +9,15 @@ const userSchema = mongoose.Schema({
   tokenFB: {
     type: String
   },
-  favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Restaurant' }],
+  favorites: [
+    {
+      _id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Restaurant'
+      },
+      placeID: String
+    }
+  ],
   score: { type: Number, default: 0 },
   votes: {
     up: { type: Number, default: 0 },

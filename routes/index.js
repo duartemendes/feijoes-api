@@ -2,6 +2,7 @@ const info = require('./info')
 const auth = require('./auth')
 const restaurants = require('./restaurants')
 const dishes = require('./dishes')
+const favorites = require('./favorites')
 
 module.exports = (app) => {
   app.get('/description', info.getDescription)
@@ -23,4 +24,7 @@ module.exports = (app) => {
   app.get('/restaurant/dishes/:placeID', dishes.dishesOfTheDay)
   app.post('/restaurant/dishes/:placeID', dishes.assignDish)
   app.put('/restaurant/dishes/:placeID', dishes.voteOnDish)
+
+  app.get('/favorites', favorites.userFavorites)
+  app.post('/favorites/:placeID', favorites.addOrRemoveFavorite)
 }

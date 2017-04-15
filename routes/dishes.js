@@ -46,6 +46,7 @@ module.exports = {
               .then(restaurant => {
                 res.json({ success: true, dish: buildDishResponse(restaurant.dishes[restaurant.dishes.length - 1], req.user._id) })
                 incrementDishes(req.user, dish)
+                // TODO: notify users in here
               })
               .catch(err => res.json(handleInternalError(err)))
           })
@@ -74,7 +75,7 @@ module.exports = {
         restaurant.dishes[index].dish.votes[key]++
         votes[key].push(req.user._id)
 
-        res.json({ success: true, dish: buildDishResponse(restaurant.dishes[index], req.user._id) })
+        res.json({ success: true, votes: buildDishResponse(restaurant.dishes[index], req.user._id).votes })
 
         restaurant.save()
         req.user.votes[key]++
