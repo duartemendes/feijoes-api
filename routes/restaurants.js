@@ -39,7 +39,8 @@ module.exports = {
                 weekDay,
                 hours
               }
-            }) : undefined
+            }) : undefined,
+            isFavorite: req.user.favorites.findIndex(favorite => favorite.placeID === req.params.placeID) >= 0
           }
         }
 
@@ -93,7 +94,8 @@ module.exports = {
               vicinity: result.vicinity,
               photoReference: (result.photos && result.photos.length) > 0 ? result.photos[0].photo_reference : undefined,
               open: (result.opening_hours && result.opening_hours.open_now) || false,
-              totalDishes: restaurant ? restaurant.dishes.length : 0
+              totalDishes: restaurant ? restaurant.dishes.length : 0,
+              isFavorite: restaurant ? req.user.favorites.findIndex(favorite => favorite.placeID === restaurant.placeID) >= 0 : false
             }))
             .catch(err => console.log(err))
         ))
