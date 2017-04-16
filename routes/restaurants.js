@@ -2,7 +2,7 @@ const config = require('../etc/config')
 const {Restaurant} = require('../models')
 const places = require('googleplaces-promises').setDefaultAPI(config.GOOGLE_PLACES_API_KEY)
 const {Haversine} = require('haversine-position')
-const INVALID_REQUEST = 'INVALID_REQUEST'
+const OK_REQUEST = 'OK'
 const handleInternalError = err => {
   console.log(err)
   return { success: false, message: err }
@@ -12,7 +12,7 @@ module.exports = {
   details: (req, res) => {
     places.placeDetailsRequest({ placeid: req.params.placeID, language: req.query.language || 'en' })
       .then(data => {
-        if (data.status === INVALID_REQUEST) { return res.json({ success: false, message: 'Restaurant not found' }) }
+        if (data.status !== OK_REQUEST) { return res.json({ success: false, message: data.status }) }
 
         let response = {
           success: true,
@@ -81,7 +81,8 @@ module.exports = {
 
     places.nearBySearch(params)
       .then(data => {
-        if (data.status === INVALID_REQUEST) { return res.json({ success: false, message: INVALID_REQUEST }) }
+        if (data.status !== OK_REQUEST) { return res.json({ success: false, message: data.status }) }
+
         const pause = new Date() - startTime
         Promise.all(data.results.map(result =>
           Restaurant.findOne({ placeID: result.place_id }).exec()
@@ -152,7 +153,7 @@ module.exports = {
 
     places.placeAutocomplete(params)
       .then(data => {
-        if (data.status === INVALID_REQUEST) { return res.json({ success: false, message: INVALID_REQUEST }) }
+        if (data.status !== OK_REQUEST) { return res.json({ success: false, message: data.status }) }
 
         data = data.predictions.map(prediction => ({
           description: prediction.description,
