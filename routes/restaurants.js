@@ -1,4 +1,4 @@
-const config = require('../config')
+const config = require('../etc/config')
 const {Restaurant} = require('../models')
 const places = require('googleplaces-promises').setDefaultAPI(config.GOOGLE_PLACES_API_KEY)
 const {Haversine} = require('haversine-position')

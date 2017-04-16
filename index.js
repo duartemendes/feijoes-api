@@ -2,7 +2,7 @@ const express = require('express')
 const bodyParser = require('body-parser') // enables reading parameters from the http request body
 const morgan = require('morgan') // prints the http request to the console
 const mongoose = require('mongoose')
-const config = require('./config')
+const config = require('./etc/config')
 
 const mongooseError = (err) => console.log('Mongoose connection error: ', err)
 mongoose.Promise = global.Promise

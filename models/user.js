@@ -6,9 +6,6 @@ const userSchema = mongoose.Schema({
     unique: true,
     required: true
   },
-  tokenFB: {
-    type: String
-  },
   favorites: [
     {
       _id: {

@@ -1,5 +1,6 @@
 const {Dish} = require('../models')
 const {Restaurant} = require('../models')
+const notify = require('./notify')
 const menuKeys = ['bread', 'soup', 'drink', 'dessert', 'coffee']
 const handleInternalError = err => {
   console.log(err)
@@ -46,7 +47,7 @@ module.exports = {
               .then(restaurant => {
                 res.json({ success: true, dish: buildDishResponse(restaurant.dishes[restaurant.dishes.length - 1], req.user._id) })
                 incrementDishes(req.user, dish)
-                // TODO: notify users in here
+                notify.newDish(restaurant, dish)
               })
               .catch(err => res.json(handleInternalError(err)))
           })
