@@ -15,12 +15,13 @@ const isDBConnected = (req, res, next) => {
 }
 
 const app = express()
-app.use(bodyParser.json())
-app.use(bodyParser.urlencoded({ extended: true }))
+app.use(bodyParser.json({limit: '50mb'}))
+app.use(bodyParser.urlencoded({limit: '50mb', extended: true}))
 app.use(morgan('dev'))
 app.set('secret', config.SECRET)
 
 app.get('/', (req, res) => res.send('Feijões API!'))
+app.get('/healthcheck', (req, res) => res.json({ success: true, status: 'OK' }))
 
 app.all('/*', isDBConnected, (req, res, next) => { next() })
 
